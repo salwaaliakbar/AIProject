@@ -93,5 +93,5 @@ def main(video_file):
         print(" Audio preprocessing failed.")
 
 if __name__ == "__main__":
-    video_file = r"c:\Users\PMLS\Desktop\my tasks\code\Voice Translator\AIProject\translators\test.mp4"
+    video_file = r"c:\Users\PMLS\Desktop\my tasks\code\Voice Translator\AIProject\test.mp4"
     main(video_file)
