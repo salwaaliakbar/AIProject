@@ -70,7 +70,7 @@ def speak_translation(text):
     try:
         converted_voice = gtts.gTTS(text, lang='ur')
         converted_voice.save('voice.mp3')
-        playsound.playsound('voice.mp3')
+        # playsound.playsound('voice.mp3')
     except Exception as e:
         print(f" Error in text-to-speech: {e}")
 
@@ -91,7 +91,38 @@ def main(video_file):
             print(" No recognized text to translate.")
     else:
         print(" Audio preprocessing failed.")
+import ffmpeg
+
+def patch_audio_to_video(input_video: str, new_audio: str, output_video: str):
+    """
+    Replace the audio track of `input_video` with `new_audio`,
+    writing the result to `output_video`.
+    """
+    # Load inputs
+    video_input = ffmpeg.input(input_video)
+    audio_input = ffmpeg.input(new_audio)
+    
+    # Build output: copy video, encode audio to AAC, end at shorter stream
+    (
+        ffmpeg
+        .output(
+            video_input.video,      # video stream
+            audio_input.audio,      # audio stream
+            output_video,
+            vcodec='copy',          # stream‑copy video
+            acodec='aac',           # encode audio
+            shortest=None           # -shortest flag
+        )
+        .global_args(
+            '-map', '0:v:0',        # map video from first input
+            '-map', '1:a:0'         # map audio from second input
+        )
+        .run(overwrite_output=True)
+    )
+    print(f"Patched video saved as: {output_video}")
+
 
 if __name__ == "__main__":
-    video_file = r"c:\Users\PMLS\Desktop\my tasks\code\Voice Translator\AIProject\translators\test.mp4"
+    video_file = r"20-second English Reading.mp4"
     main(video_file)
+    patch_audio_to_video("20-second English Reading.mp4", "voice.mp3", "test_urdu.mp4")
