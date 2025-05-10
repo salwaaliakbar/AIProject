@@ -6,6 +6,45 @@ import ffmpeg
 import sys
 import gtts
 import playsound
+# from openai import OpenAI           # new client class :contentReference[oaicite:6]{index=6}
+
+# Load variables from `.env` into os.environ
+# load_dotenv()  # reads .env in current working directory :contentReference[oaicite:5]{index=5}
+from dotenv import load_dotenv
+load_dotenv()
+
+from google import genai
+from google.genai import types
+import os
+
+# Create a Gemini client using your API key
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])  # Gemini Developer API mode :contentReference[oaicite:6]{index=6}
+
+def refine_urdu_gemini(english: str, literal_urdu: str) -> str:
+    """
+    Send English + literal Urdu to Gemini, return idiomatic Urdu.
+    """
+    # Build the prompt merging both inputs
+    prompt = (
+        f"You are a professional Urdu editor.\n"
+        f"English: \"{english}\"\n"
+        f"Literal Urdu: \"{literal_urdu}\"\n\n"
+        "Please rewrite the Literal Urdu translation so it reads naturally in Urdu, "
+        "using proper grammar and idiomatic expressions. Only return the improved Urdu."
+    )
+    # Call Gemini's generate_content endpoint
+    response = client.models.generate_content(
+        model="gemini-2.0-flash-001",     # latest Flash model :contentReference[oaicite:7]{index=7}
+        contents=prompt,                  # prompt text :contentReference[oaicite:8]{index=8}
+        config=types.GenerateContentConfig(
+            temperature=0.7,              # moderate creativity :contentReference[oaicite:9]{index=9}
+            max_output_tokens=300         # max tokens in reply :contentReference[oaicite:10]{index=10}
+        )
+    )
+    # Return only the cleaned‑up Urdu text
+    return response.text.strip()
+
+
 
 # Force the output encoding to UTF-8
 sys.stdout.reconfigure(encoding='utf-8')
@@ -83,15 +122,21 @@ def main(video_file):
         if recognized_text:
             translated_text = translate_to_urdu(recognized_text)
             if translated_text:
-                print(" Final Translated Text:", translated_text)
-                speak_translation(translated_text)
+                # Get a more natural Urdu version via ChatGPT
+                cleaned_urdu = refine_urdu_gemini(recognized_text, translated_text)
+                print("Cleaned Urdu:", cleaned_urdu)
+                speak_translation(cleaned_urdu)
+                # print(" Final Translated Text:", translated_text)
+                # speak_translation(translated_text)
+
+                # Use cleaned_urdu (instead of translated_text) for TTS
+                # speak_translation(cleaned_urdu)
             else:
                 print(" Translation failed.")
         else:
             print(" No recognized text to translate.")
     else:
         print(" Audio preprocessing failed.")
-import ffmpeg
 
 def patch_audio_to_video(input_video: str, new_audio: str, output_video: str):
     """
