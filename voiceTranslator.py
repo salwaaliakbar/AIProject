@@ -113,6 +113,15 @@ def speak_translation(text):
     except Exception as e:
         print(f" Error in text-to-speech: {e}")
 
+def ffmpeg_speedup(input_file: str, output_file: str, speed: float = 1.5):
+    (
+        ffmpeg
+        .input(input_file)
+        .output(output_file, **{'filter:a': f"atempo={speed}"})
+        .run(overwrite_output=True)
+    )
+
+
 # Main process pipeline
 def main(video_file):
     audio_file = extract_audio_from_video(video_file)
@@ -168,6 +177,7 @@ def patch_audio_to_video(input_video: str, new_audio: str, output_video: str):
 
 
 if __name__ == "__main__":
-    video_file = r"20-second English Reading.mp4"
+    video_file = r"RGB explained in 30 seconds.mp4"
     main(video_file)
-    patch_audio_to_video("20-second English Reading.mp4", "voice.mp3", "test_urdu.mp4")
+    ffmpeg_speedup('voice.mp3', 'voice_fast.mp3', speed=2.0)
+    patch_audio_to_video("RGB explained in 30 seconds.mp4", "voice_fast.mp3", "Science_urdu.mp4")
