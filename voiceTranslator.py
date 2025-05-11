@@ -95,6 +95,41 @@ def speak_translation(text):
         converted_voice.save('voice.mp3')
     except Exception as e:
         print(f"Error in text-to-speech: {e}")
+        print(f" Error in text-to-speech: {e}")
+
+def ffmpeg_speedup(input_file: str, output_file: str, speed: float = 1.5):
+    (
+        ffmpeg
+        .input(input_file)
+        .output(output_file, **{'filter:a': f"atempo={speed}"})
+        .run(overwrite_output=True)
+    )
+
+
+# Main process pipeline
+def main(video_file):
+    audio_file = extract_audio_from_video(video_file)
+    cleaned_audio_file = preprocess_audio(audio_file)
+    if cleaned_audio_file:
+        recognized_text = recognize_speech_from_audio(cleaned_audio_file)
+        if recognized_text:
+            translated_text = translate_to_urdu(recognized_text)
+            if translated_text:
+                # Get a more natural Urdu version via ChatGPT
+                cleaned_urdu = refine_urdu_gemini(recognized_text, translated_text)
+                print("Cleaned Urdu:", cleaned_urdu)
+                speak_translation(cleaned_urdu)
+                # print(" Final Translated Text:", translated_text)
+                # speak_translation(translated_text)
+
+                # Use cleaned_urdu (instead of translated_text) for TTS
+                # speak_translation(cleaned_urdu)
+            else:
+                print(" Translation failed.")
+        else:
+            print(" No recognized text to translate.")
+    else:
+        print(" Audio preprocessing failed.")
 
 def patch_audio_to_video(input_video: str, new_audio: str, output_video: str):
     try:
@@ -120,7 +155,8 @@ def main(video_file):
                     cleaned_urdu = refine_urdu_gemini(recognized_text, translated_text)
                     print("Cleaned Urdu:", cleaned_urdu)
                     speak_translation(cleaned_urdu)
-                    patch_audio_to_video(video_file, "voice.mp3", "test_urdu.mp4")
+                    ffmpeg_speedup('voice.mp3', 'voice_fast.mp3', speed=2.0)
+                    patch_audio_to_video(video_file, "voice_fast.mp3", "test_urdu.mp4")
                 else:
                     print("Translation failed.")
             else:
@@ -149,3 +185,4 @@ def select_video_file():
 
 if __name__ == "__main__":
     select_video_file()
+
