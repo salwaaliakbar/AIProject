@@ -177,7 +177,7 @@ def patch_audio_to_video(input_video: str, new_audio: str, output_video: str):
 
 
 if __name__ == "__main__":
-    video_file = r"RGB explained in 30 seconds.mp4"
+    video_file = r"Cloud.mp4"
     main(video_file)
-    ffmpeg_speedup('voice.mp3', 'voice_fast.mp3', speed=2.0)
-    patch_audio_to_video("RGB explained in 30 seconds.mp4", "voice_fast.mp3", "Science_urdu.mp4")
+    ffmpeg_speedup('voice.mp3', 'voice_fast.mp3', speed=1.6)
+    patch_audio_to_video("Cloud.mp4", "voice_fast.mp3", "Science_urdu.mp4")
